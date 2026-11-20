@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIDI Wholesale & Retail | Wristwatches & Jewelry</title>
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --card: #16161a;
+      --border: #27272e;
+      --gold: #d4af37;
+      --gold-light: #f3d982;
+      --text: #f4f4f6;
+      --muted: #9ca3af;
+      --green: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 90px; }
+    header {
+      padding: 24px 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #171510 0%, var(--bg) 100%);
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      padding: 4px 10px;
+      border-radius: 99px;
+      margin-bottom: 10px;
+    }
+    h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 6px; }
+    .toggle-wrap {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 18px auto 0;
+      background: var(--card);
+      padding: 5px;
+      border-radius: 10px;
+      width: fit-content;
+      border: 1px solid var(--border);
+    }
+    .toggle-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 16px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .toggle-btn.active { background: var(--gold); color: #000; }
+    .container { max-width: 960px; margin: 0 auto; padding: 20px 16px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .img-box {
+      width: 100%;
+      height: 210px;
+      background: #1f1f25;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-size: 13px;
+      overflow: hidden;
+    }
+    .img-box img { width: 100%; height: 100%; object-fit: cover; }
+    .card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .tag { font-size: 11px; color: var(--gold-light); margin-bottom: 4px; }
+    .title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .desc { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
+    .price-row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+    .price { font-size: 18px; font-weight: 700; color: var(--gold); }
+    .btn-add {
+      background: #232329;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-add:hover { border-color: var(--gold); color: var(--gold); }
+    .cart-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #141418;
+      border-top: 1px solid var(--gold);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 50;
+    }
+    .cart-info { font-size: 13px; }
+    .cart-total { font-size: 17px; font-weight: 700; color: var(--gold); }
+    .btn-wa {
+      background: var(--green);
+      color: #052e16;
+      border: none;
+      padding: 11px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Walk-in: 15b Ijegun Rd, Ikotun Lagos</div>
+    <h1>DIDI WRISTWATCHES & JEWELRY</h1>
+    <p class="sub">Select Retail or Wholesale pricing, add items, and send your order straight to WhatsApp.</p>
+    <div class="toggle-wrap">
+      <button class="toggle-btn active" id="btnRetail" onclick="setMode('retail')">Retail Prices</button>
+      <button class="toggle-btn" id="btnWholesale" onclick="setMode('wholesale')">Wholesale Prices</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="grid" id="productGrid"></div>
+  </div>
+
+  <div class="cart-bar">
+    <div class="cart-info">
+      <div id="cartCount">0 items selected (Retail)</div>
+      <div class="cart-total" id="cartTotal">₦0</div>
+    </div>
+    <button class="btn-wa" onclick="checkoutWhatsApp()">Order on WhatsApp →</button>
+  </div>
+
+  <script>
+    const WHATSAPP_NUMBER = "2349060472560";
+    let mode = "retail";
+    let cart = [];
+
+    const products = [
+      {
+        id: 1,
+        name: "3-Strand Gold Beaded Bracelet",
+        category: "Jewelry",
+        desc: "Classic layered gold-tone bead bracelet set.",
+        retail: 4000,
+        wholesale: 3000,
+        img: "item1.jpg"
+      },
+      {
+        id: 2,
+        name: "Poedagar Round Leather Watch",
+        category: "Men's Watches",
+        desc: "Black dial & leather strap. Includes branded box & bag option.",
+        retail: 11000,
+        wholesale: 8500,
+        img: "item2.jpg"
+      },
+      {
+        id: 3,
+        name: "Poedagar Square All-Black Watch",
+        category: "Men's Watches",
+        desc: "Matte black octagonal case with black leather strap.",
+        retail: 11000,
+        wholesale: 8500,
+        img: "item3.jpg"
+      },
+      {
+        id: 4,
+        name: "Poedagar Silver & Black Square Watch",
+        category: "Men's Watches",
+        desc: "Brushed silver bezel with black dial, box & gift bag.",
+        retail: 11000,
+        wholesale: 8500,
+        img: "item4.jpg"
+      },
+      {
+        id: 5,
+        name: "Oval Gold-Rim Women's Leather Watch",
+        category: "Women's Watches",
+        desc: "Available in Slate Blue, Black, Cream & Nude straps.",
+        retail: 7000,
+        wholesale: 5000,
+        img: "item5.jpg"
+      },
+      {
+        id: 6,
+        name: "TOMI Gift Set (Watch + Wallet + Pen)",
+        category: "Gift Sets",
+        desc: "Luxury presentation box with blue-dial watch, wallet & pen.",
+        retail: 18000,
+        wholesale: 14500,
+        img: "item6.jpg"
+      }
+    ];
+
+    function setMode(newMode) {
+      mode = newMode;
+      document.getElementById("btnRetail").classList.toggle("active", mode === "retail");
+      document.getElementById("btnWholesale").classList.toggle("active", mode === "wholesale");
+      renderProducts();
+      updateCartUI();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById("productGrid");
+      grid.innerHTML = products.map(p => {
+        const price = mode === "retail" ? p.retail : p.wholesale;
+        return `
+          <div class="card">
+            <div class="img-box">
+              <img src="${p.img}" alt="${p.name}" onerror="this.style.display='none'; this.parentElement.innerText='${p.name}';">
+            </div>
+            <div class="card-body">
+              <div>
+                <div class="tag">${p.category}</div>
+                <div class="title">${p.name}</div>
+                <div class="desc">${p.desc}</div>
+              </div>
+              <div class="price-row">
+                <div class="price">₦${price.toLocaleString()}</div>
+                <button class="btn-add" onclick="addToCart(${p.id})">+ Add</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function addToCart(id) {
+      cart.push(id);
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const total = cart.reduce((sum, id) => {
+        const item = products.find(p => p.id === id);
+        return sum + (mode === "retail" ? item.retail : item.wholesale);
+      }, 0);
+      const label = mode.charAt(0).toUpperCase() + mode.slice(1);
+      document.getElementById("cartCount").innerText = `${cart.length} item(s) selected (${label})`;
+      document.getElementById("cartTotal").innerText = `₦${total.toLocaleString()}`;
+    }
+
+    function checkoutWhatsApp() {
+      if (cart.length === 0) {
+        alert("Tap '+ Add' on at least one item first to test the WhatsApp order summary!");
+        return;
+      }
+      const counts = {};
+      cart.forEach(id => counts[id] = (counts[id] || 0) + 1);
+      let lines = [`Hello Didi Jewelry! I'd like to place a *${mode.toUpperCase()}* order:\n`];
+      let total = 0;
+
+      Object.keys(counts).forEach(id => {
+        const item = products.find(p => p.id == id);
+        const unitPrice = mode === "retail" ? item.retail : item.wholesale;
+        const sub = unitPrice * counts[id];
+        total += sub;
+        lines.push(`• ${counts[id]}x ${item.name} — ₦${sub.toLocaleString()}`);
+      });
+
+      lines.push(`\n*Total: ₦${total.toLocaleString()}*`);
+      lines.push(`Please confirm availability & delivery details.`);
+
+      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
+      window.open(url, "_blank");
+    }
+
+    renderProducts();
+  </script>
+</body>
+</html>
